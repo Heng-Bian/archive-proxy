@@ -3,10 +3,10 @@ package archive
 import (
 	"archive/zip"
 	"errors"
+	"github.com/Heng-Bian/archive-proxy/third_party/ranger"
 	"io"
 	"net/http"
 	"net/url"
-	"github.com/Heng-Bian/archive-proxy/third_party/ranger"
 )
 
 var defaultClient *http.Client = &http.Client{}
@@ -15,7 +15,7 @@ func ListZipFiles(zipUrl string, charset string, client *http.Client) (files []s
 	if client == nil {
 		client = defaultClient
 	}
-	fileNames := make([]string, 10)
+	fileNames := make([]string, 0, 10)
 	zipReader, err := urlToZipReader(zipUrl, client)
 	if err != nil {
 		return fileNames, err
@@ -73,12 +73,11 @@ func UnzipByFileIndex(zipUrl string, index int, client *http.Client) (io.ReadClo
 	}
 	return zipReader.File[index].Open()
 }
-
-func urlToZipReader(zipUrl string, client *http.Client) (*zip.Reader, error) {
+func urlToReader(httpUrl string, client *http.Client) (*ranger.Reader, error) {
 	if client == nil {
 		client = defaultClient
 	}
-	url, err := url.Parse(zipUrl)
+	url, err := url.Parse(httpUrl)
 	if err != nil {
 		return nil, err
 	}
@@ -87,6 +86,14 @@ func urlToZipReader(zipUrl string, client *http.Client) (*zip.Reader, error) {
 		URL:    url,
 	}
 	reader, err := ranger.NewReader(httpRanger)
+	if err != nil {
+		return nil, err
+	}
+	return reader, err
+}
+
+func urlToZipReader(zipUrl string, client *http.Client) (*zip.Reader, error) {
+	reader, err := urlToReader(zipUrl, client)
 	if err != nil {
 		return nil, err
 	}
