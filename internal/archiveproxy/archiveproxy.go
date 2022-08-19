@@ -10,8 +10,12 @@ import (
 const (
 	zip = "zip"
 	tar = "tar"
-
 )
+
+type ArchiveStruct struct {
+	Archive_type string
+	Files []string
+}
 
 type Proxy struct {
 	// client used to fetch remote URLs
@@ -65,12 +69,14 @@ func (p *Proxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path == "/favicon.ico" {
 		return // ignore favicon requests
 	}
-
+	
 	switch r.URL.Path {
 	case "/healthz":
 		handler = http.HandlerFunc(p.ServeHealthCheck)
 	case "/zip":
-
+		handler = http.HandlerFunc(p.Serve404)
+	case "/tar":
+		handler = http.HandlerFunc(p.ServeZip)
 	default:
 		handler = http.HandlerFunc(p.Serve404)
 	}
@@ -79,7 +85,6 @@ func (p *Proxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func (p *Proxy) ServeHealthCheck(w http.ResponseWriter, r *http.Request) {
 	_, _ = fmt.Fprint(w, "OK")
-	return
 }
 
 func (p *Proxy) Serve404(w http.ResponseWriter, r *http.Request) {
@@ -88,13 +93,39 @@ func (p *Proxy) Serve404(w http.ResponseWriter, r *http.Request) {
 
 // /zip/${innerPath}?url=https://example.com/example.zip
 // url=https://example.com/examle.zip
-//
+func (p *Proxy) ServeAuto(w http.ResponseWriter, r *http.Request){
+	http.DetectContentType()
+}
 func (p *Proxy) ServeZip(w http.ResponseWriter, r *http.Request) {
 
 }
 
-//security check before handle requests
-func (p *Proxy) PreCheck(w *http.ResponseWriter, r *http.Request) (pass bool, err error) {
+func (p *Proxy) ServeTar(w http.ResponseWriter, r *http.Request) {
+
+}
+
+func (p *Proxy) ServeGzip(w http.ResponseWriter, r *http.Request) {
+
+}
+
+func (p *Proxy) Serve7z(w http.ResponseWriter, r *http.Request) {
+
+}
+
+func (p *Proxy) ServeBzip2(w http.ResponseWriter, r *http.Request) {
+
+}
+
+func (p *Proxy) ServeXz(w http.ResponseWriter, r *http.Request) {
+
+}
+
+func (p *Proxy) ServeRar(w http.ResponseWriter, r *http.Request) {
+
+}
+
+// security check before handle requests
+func (p *Proxy) PreCheck(w http.ResponseWriter, r *http.Request){
 	//TODO
-	return true, nil
+	
 }

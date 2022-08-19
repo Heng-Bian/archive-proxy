@@ -4,19 +4,13 @@ import (
 	"archive/tar"
 	"errors"
 	"io"
-	"net/http"
+
+	"github.com/Heng-Bian/archive-proxy/third_party/ranger"
 )
 
-func ListTarFiles(tarUrl string, charset string, client *http.Client) (files []string, err error) {
+func ListTarFiles(r *ranger.Reader, charset string) (files []string, err error) {
 	fileNames := make([]string, 0, 10)
-	if client == nil {
-		client = defaultClient
-	}
-	reader, err := urlToReader(tarUrl, client)
-	if err != nil {
-		return fileNames, err
-	}
-	tarReader := tar.NewReader(reader)
+	tarReader := tar.NewReader(r)
 	for {
 		header, err := tarReader.Next()
 		if err != nil {
@@ -38,15 +32,8 @@ func ListTarFiles(tarUrl string, charset string, client *http.Client) (files []s
 	}
 }
 
-func UnTarByFileName(tarUrl string, name string, charset string, client *http.Client) (io.Reader, error) {
-	if client == nil {
-		client = defaultClient
-	}
-	reader, err := urlToReader(tarUrl, client)
-	if err != nil {
-		return nil, err
-	}
-	tarReader := tar.NewReader(reader)
+func UnTarByFileName(r *ranger.Reader, name string, charset string) (io.Reader, error) {
+	tarReader := tar.NewReader(r)
 	for {
 		header, err := tarReader.Next()
 		if err != nil {
@@ -70,15 +57,8 @@ func UnTarByFileName(tarUrl string, name string, charset string, client *http.Cl
 	}
 }
 
-func UnTarByFileIndex(tarUrl string, index int, client *http.Client) (io.Reader, error) {
-	if client == nil {
-		client = defaultClient
-	}
-	reader, err := urlToReader(tarUrl, client)
-	if err != nil {
-		return nil, err
-	}
-	tarReader := tar.NewReader(reader)
+func UnTarByFileIndex(r *ranger.Reader, index int) (io.Reader, error) {
+	tarReader := tar.NewReader(r)
 	var count int
 	for {
 		_, err := tarReader.Next()

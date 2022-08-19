@@ -11,12 +11,13 @@ import (
 
 var defaultClient *http.Client = &http.Client{}
 
-func ListZipFiles(zipUrl string, charset string, client *http.Client) (files []string, err error) {
-	if client == nil {
-		client = defaultClient
-	}
+func ListZipFiles(r *ranger.Reader, charset string) (files []string, err error) {
 	fileNames := make([]string, 0, 10)
-	zipReader, err := urlToZipReader(zipUrl, client)
+	lenth, err := r.Length()
+	if err != nil {
+		return nil, err
+	}
+	zipReader, err := zip.NewReader(r, lenth)
 	if err != nil {
 		return fileNames, err
 	}
@@ -36,11 +37,12 @@ func ListZipFiles(zipUrl string, charset string, client *http.Client) (files []s
 	return fileNames, nil
 }
 
-func UnzipByFileName(zipUrl string, name string, charset string, client *http.Client) (io.ReadCloser, error) {
-	if client == nil {
-		client = defaultClient
+func UnzipByFileName(r *ranger.Reader, name string, charset string) (io.ReadCloser, error) {
+	lenth, err := r.Length()
+	if err != nil {
+		return nil, err
 	}
-	zipReader, err := urlToZipReader(zipUrl, client)
+	zipReader, err := zip.NewReader(r, lenth)
 	if err != nil {
 		return nil, err
 	}
@@ -60,11 +62,15 @@ func UnzipByFileName(zipUrl string, name string, charset string, client *http.Cl
 
 }
 
-func UnzipByFileIndex(zipUrl string, index int, client *http.Client) (io.ReadCloser, error) {
-	if client == nil {
-		client = defaultClient
+func UnzipByFileIndex(r *ranger.Reader, index int) (io.ReadCloser, error) {
+	lenth, err := r.Length()
+	if err != nil {
+		return nil, err
 	}
-	zipReader, err := urlToZipReader(zipUrl, client)
+	zipReader, err := zip.NewReader(r, lenth)
+	if err != nil {
+		return nil, err
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +79,8 @@ func UnzipByFileIndex(zipUrl string, index int, client *http.Client) (io.ReadClo
 	}
 	return zipReader.File[index].Open()
 }
-func urlToReader(httpUrl string, client *http.Client) (*ranger.Reader, error) {
+
+func UrlToReader(httpUrl string, client *http.Client) (*ranger.Reader, error) {
 	if client == nil {
 		client = defaultClient
 	}
@@ -90,20 +97,4 @@ func urlToReader(httpUrl string, client *http.Client) (*ranger.Reader, error) {
 		return nil, err
 	}
 	return reader, err
-}
-
-func urlToZipReader(zipUrl string, client *http.Client) (*zip.Reader, error) {
-	reader, err := urlToReader(zipUrl, client)
-	if err != nil {
-		return nil, err
-	}
-	lenth, err := reader.Length()
-	if err != nil {
-		return nil, err
-	}
-	zipReader, err := zip.NewReader(reader, lenth)
-	if err != nil {
-		return nil, err
-	}
-	return zipReader, nil
 }
