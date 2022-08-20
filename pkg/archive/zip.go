@@ -5,11 +5,8 @@ import (
 	"errors"
 	"github.com/Heng-Bian/archive-proxy/third_party/ranger"
 	"io"
-	"net/http"
-	"net/url"
 )
 
-var defaultClient *http.Client = &http.Client{}
 
 func ListZipFiles(r *ranger.Reader, charset string) (files []string, err error) {
 	fileNames := make([]string, 0, 10)
@@ -80,21 +77,3 @@ func UnzipByFileIndex(r *ranger.Reader, index int) (io.ReadCloser, error) {
 	return zipReader.File[index].Open()
 }
 
-func UrlToReader(httpUrl string, client *http.Client) (*ranger.Reader, error) {
-	if client == nil {
-		client = defaultClient
-	}
-	url, err := url.Parse(httpUrl)
-	if err != nil {
-		return nil, err
-	}
-	httpRanger := &ranger.HTTPRanger{
-		Client: client,
-		URL:    url,
-	}
-	reader, err := ranger.NewReader(httpRanger)
-	if err != nil {
-		return nil, err
-	}
-	return reader, err
-}

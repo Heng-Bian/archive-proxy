@@ -8,4 +8,12 @@ require (
 	golang.org/x/text v0.3.7
 )
 
-require golang.org/x/net v0.0.0-20220624214902-1bab6f366d9e // indirect
+require (
+	github.com/saracen/solidblock v0.0.0-20190426153529-45df20abab6f // indirect
+	github.com/ulikunitz/xz v0.5.10 // indirect
+)
+
+require (
+	github.com/saracen/go7z v0.0.0-20191010121135-9c09b6bd7fda
+	golang.org/x/net v0.0.0-20220624214902-1bab6f366d9e // indirect
+)
