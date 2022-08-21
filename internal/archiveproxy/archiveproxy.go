@@ -1,6 +1,8 @@
 package archiveproxy
 
 import (
+	"compress/bzip2"
+	"compress/gzip"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -13,6 +15,7 @@ import (
 
 	"github.com/Heng-Bian/archive-proxy/pkg/archive"
 	"github.com/Heng-Bian/archive-proxy/third_party/ranger"
+	"github.com/ulikunitz/xz"
 )
 
 const (
@@ -212,7 +215,17 @@ func (p *Proxy) ServeArchive(w http.ResponseWriter, r *http.Request) {
 				r, err := archive.Un7zByFileIndex(reader, fileIndex)
 				writeStream(w, r, err)
 			}
+		case archive.GZIP_TYPE:
+			r, err := gzip.NewReader(reader)
+			writeStream(w, r, err)
+		case archive.XZ_TYPE:
+			r, err := xz.NewReader(reader)
+			writeStream(w, r, err)
+		case archive.BZIP2_TYPE:
+			r := bzip2.NewReader(reader)
+			writeStream(w, r, nil)
 		}
+
 	} else {
 		w.WriteHeader(404)
 	}
@@ -237,7 +250,7 @@ func writeRes(w http.ResponseWriter, res ArchiveStruct, err error) {
 	jsonBytes, err := json.Marshal(res)
 	if err != nil {
 		w.WriteHeader(500)
-		fmt.Fprintf(w, err.Error())
+		fmt.Fprint(w, err.Error())
 		return
 	}
 	w.Write(jsonBytes)
