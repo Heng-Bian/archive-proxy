@@ -34,7 +34,7 @@ func ListZipFiles(r *ranger.Reader, charset string) (files []string, err error) 
 	return fileNames, nil
 }
 
-func UnzipByFileName(r *ranger.Reader, name string, charset string) (io.ReadCloser, error) {
+func UnzipByFileName(r *ranger.Reader, name string, charset string) (io.Reader, error) {
 	lenth, err := r.Length()
 	if err != nil {
 		return nil, err
@@ -59,7 +59,7 @@ func UnzipByFileName(r *ranger.Reader, name string, charset string) (io.ReadClos
 
 }
 
-func UnzipByFileIndex(r *ranger.Reader, index int) (io.ReadCloser, error) {
+func UnzipByFileIndex(r *ranger.Reader, index int) (io.Reader, error) {
 	lenth, err := r.Length()
 	if err != nil {
 		return nil, err
@@ -72,7 +72,7 @@ func UnzipByFileIndex(r *ranger.Reader, index int) (io.ReadCloser, error) {
 		return nil, err
 	}
 	if index > len(zipReader.File) {
-		return nil, errors.New("index out of boundary")
+		return nil, ErrOutOfBoundary
 	}
 	return zipReader.File[index].Open()
 }

@@ -45,7 +45,7 @@ func Un7zByFileName(r *ranger.Reader, name string) (io.Reader, error) {
 		if err != nil {
 			//io.EOF is not a error
 			if err == io.EOF {
-				return nil, FILE_NOT_FOUND
+				return nil, ErrFileNotFound
 			} else {
 				return nil, err
 			}
@@ -71,7 +71,7 @@ func Un7zByFileIndex(r *ranger.Reader, index int) (io.Reader, error) {
 		if err != nil {
 			//io.EOF is not a error
 			if err == io.EOF {
-				return nil, FILE_NOT_FOUND
+				return nil, ErrFileNotFound
 			} else {
 				return nil, err
 			}

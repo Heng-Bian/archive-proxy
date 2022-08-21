@@ -1,20 +1,31 @@
 package archiveproxy
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
+	"strconv"
+	"strings"
 	"time"
+
+	"github.com/Heng-Bian/archive-proxy/pkg/archive"
+	"github.com/Heng-Bian/archive-proxy/third_party/ranger"
 )
 
 const (
-	zip = "zip"
-	tar = "tar"
+	//parameter name
+	targetUrl  = "url"
+	charset    = "charset"
+	fileIndex  = "index"
+	fileFormat = "format"
 )
 
 type ArchiveStruct struct {
-	Archive_type string
-	Files []string
+	FileType string
+	Files    []string
 }
 
 type Proxy struct {
@@ -69,15 +80,20 @@ func (p *Proxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path == "/favicon.ico" {
 		return // ignore favicon requests
 	}
-	
-	switch r.URL.Path {
-	case "/healthz":
+
+	if strings.HasPrefix(r.URL.Path, "/healthz") {
+
 		handler = http.HandlerFunc(p.ServeHealthCheck)
-	case "/zip":
-		handler = http.HandlerFunc(p.Serve404)
-	case "/tar":
-		handler = http.HandlerFunc(p.ServeZip)
-	default:
+
+	} else if strings.HasPrefix(r.URL.Path, "/list") {
+
+		handler = http.HandlerFunc(p.ServeArchive)
+
+	} else if strings.HasPrefix(r.URL.Path, "/stream") {
+
+		handler = http.HandlerFunc(p.ServeArchive)
+
+	} else {
 		handler = http.HandlerFunc(p.Serve404)
 	}
 	handler.ServeHTTP(w, r)
@@ -87,45 +103,151 @@ func (p *Proxy) ServeHealthCheck(w http.ResponseWriter, r *http.Request) {
 	_, _ = fmt.Fprint(w, "OK")
 }
 
+func (p *Proxy) ServeArchive(w http.ResponseWriter, r *http.Request) {
+	targetUrl := r.URL.Query().Get(targetUrl)
+	fileFormat := r.URL.Query().Get(fileFormat)
+	charset := r.URL.Query().Get(charset)
+	index := r.URL.Query().Get(fileIndex)
+
+	var reader *ranger.Reader
+
+	if targetUrl == "" {
+		fmt.Fprintf(w, "url must not empty!")
+		w.WriteHeader(500)
+		return
+	} else {
+		r, err := archive.UrlToReader(targetUrl, p.Client)
+		if err != nil {
+			fmt.Fprintf(w, "fail to crete reader from given url,err:%s", err)
+			w.WriteHeader(500)
+			return
+		} else {
+			reader = r
+		}
+	}
+	if fileFormat == "" {
+		mimeType, err := archive.DetectMimeTypeThenSeek(reader)
+		if err != nil {
+			fmt.Fprintf(w, "fail to detect file type,err:%s", err)
+			w.WriteHeader(500)
+			return
+		}
+		fileFormat = archive.MineTypeTransform(mimeType)
+	}
+
+	if strings.HasPrefix(r.URL.Path, "/list") {
+		//list archive
+		var res ArchiveStruct
+		res.FileType = fileFormat
+		switch fileFormat {
+		case archive.ZIP_TYPE:
+			files, err := archive.ListZipFiles(reader, charset)
+			res.Files = files
+			writeRes(w, res, err)
+		case archive.TAR_TYPE:
+			files, err := archive.ListTarFiles(reader, charset)
+			res.Files = files
+			writeRes(w, res, err)
+		case archive.RAR_TYPE:
+			files, err := archive.ListRarFiles(reader)
+			res.Files = files
+			writeRes(w, res, err)
+		case archive.SEVEN_Z_TYPE:
+			files, err := archive.List7zFiles(reader)
+			res.Files = files
+			writeRes(w, res, err)
+		default:
+			writeRes(w, res, errors.New("do not support "+res.FileType))
+		}
+
+	} else if strings.HasPrefix(r.URL.Path, "/stream") {
+		//return stream
+		var isUseFileName bool
+		var fileIndex int
+		fileName := strings.TrimPrefix(r.URL.Path, "/stream/")
+
+		// file name is empty
+		if fileName == r.URL.Path {
+			value, err := strconv.Atoi(index)
+			if err != nil {
+				var empty ArchiveStruct
+				writeRes(w, empty, err)
+				return
+			}
+			fileIndex = value
+			isUseFileName = false
+		} else {
+			isUseFileName = true
+		}
+		switch fileFormat {
+		case archive.ZIP_TYPE:
+			if isUseFileName {
+				r, err := archive.UnzipByFileName(reader, fileName, charset)
+				writeStream(w, r, err)
+			} else {
+				r, err := archive.UnzipByFileIndex(reader, fileIndex)
+				writeStream(w, r, err)
+			}
+		case archive.TAR_TYPE:
+			if isUseFileName {
+				r, err := archive.UnTarByFileName(reader, fileName, charset)
+				writeStream(w, r, err)
+			} else {
+				r, err := archive.UnTarByFileIndex(reader, fileIndex)
+				writeStream(w, r, err)
+			}
+		case archive.RAR_TYPE:
+			if isUseFileName {
+				r, err := archive.UnRarByFileName(reader, fileName)
+				writeStream(w, r, err)
+			} else {
+				r, err := archive.UnRarByFileIndex(reader, fileIndex)
+				writeStream(w, r, err)
+			}
+		case archive.SEVEN_Z_TYPE:
+			if isUseFileName {
+				r, err := archive.Un7zByFileName(reader, fileName)
+				writeStream(w, r, err)
+			} else {
+				r, err := archive.Un7zByFileIndex(reader, fileIndex)
+				writeStream(w, r, err)
+			}
+		}
+	} else {
+		w.WriteHeader(404)
+	}
+}
+
 func (p *Proxy) Serve404(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotFound)
 }
 
-// /zip/${innerPath}?url=https://example.com/example.zip
-// url=https://example.com/examle.zip
-func (p *Proxy) ServeAuto(w http.ResponseWriter, r *http.Request){
-	http.DetectContentType()
-}
-func (p *Proxy) ServeZip(w http.ResponseWriter, r *http.Request) {
-
-}
-
-func (p *Proxy) ServeTar(w http.ResponseWriter, r *http.Request) {
-
-}
-
-func (p *Proxy) ServeGzip(w http.ResponseWriter, r *http.Request) {
-
-}
-
-func (p *Proxy) Serve7z(w http.ResponseWriter, r *http.Request) {
-
-}
-
-func (p *Proxy) ServeBzip2(w http.ResponseWriter, r *http.Request) {
-
-}
-
-func (p *Proxy) ServeXz(w http.ResponseWriter, r *http.Request) {
-
-}
-
-func (p *Proxy) ServeRar(w http.ResponseWriter, r *http.Request) {
-
-}
-
 // security check before handle requests
-func (p *Proxy) PreCheck(w http.ResponseWriter, r *http.Request){
+func (p *Proxy) PreCheck(w http.ResponseWriter, r *http.Request) {
 	//TODO
-	
+
+}
+
+func writeRes(w http.ResponseWriter, res ArchiveStruct, err error) {
+	if err != nil {
+		w.WriteHeader(500)
+		fmt.Fprint(w, err.Error())
+		return
+	}
+	jsonBytes, err := json.Marshal(res)
+	if err != nil {
+		w.WriteHeader(500)
+		fmt.Fprintf(w, err.Error())
+		return
+	}
+	w.Write(jsonBytes)
+}
+
+func writeStream(w http.ResponseWriter, r io.Reader, err error) {
+	if err != nil {
+		w.WriteHeader(500)
+		fmt.Fprint(w, err.Error())
+		return
+	}
+	io.Copy(w, r)
 }
