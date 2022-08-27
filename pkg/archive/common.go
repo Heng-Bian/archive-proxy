@@ -88,7 +88,7 @@ func DetectMimeTypeThenSeek(r io.Reader) (string, error) {
 	return mime.String(), nil
 }
 
-func UrlToReader(httpUrl string, client *http.Client) (*ranger.Reader, error) {
+func UrlToReader(httpUrl string, client *http.Client) (*ranger.RingBuffReader, error) {
 	if client == nil {
 		client = defaultClient
 	}
@@ -100,7 +100,7 @@ func UrlToReader(httpUrl string, client *http.Client) (*ranger.Reader, error) {
 		Client: client,
 		URL:    url,
 	}
-	reader, err := ranger.NewReader(httpRanger)
+	reader, err := ranger.NewRingBuffReader(httpRanger)
 	if err != nil {
 		return nil, err
 	}

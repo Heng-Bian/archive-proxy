@@ -8,7 +8,7 @@ import (
 	"github.com/Heng-Bian/archive-proxy/third_party/ranger"
 )
 
-func ListTarFiles(r *ranger.Reader, charset string) (files []string, err error) {
+func ListTarFiles(r  *ranger.RingBuffReader, charset string) (files []string, err error) {
 	fileNames := make([]string, 0, 10)
 	tarReader := tar.NewReader(r)
 	for {
@@ -32,7 +32,7 @@ func ListTarFiles(r *ranger.Reader, charset string) (files []string, err error) 
 	}
 }
 
-func UnTarByFileName(r *ranger.Reader, name string, charset string) (io.Reader, error) {
+func UnTarByFileName(r *ranger.RingBuffReader, name string, charset string) (io.Reader, error) {
 	tarReader := tar.NewReader(r)
 	for {
 		header, err := tarReader.Next()
@@ -57,7 +57,7 @@ func UnTarByFileName(r *ranger.Reader, name string, charset string) (io.Reader, 
 	}
 }
 
-func UnTarByFileIndex(r *ranger.Reader, index int) (io.Reader, error) {
+func UnTarByFileIndex(r *ranger.RingBuffReader, index int) (io.Reader, error) {
 	tarReader := tar.NewReader(r)
 	var count int
 	for {

@@ -112,7 +112,7 @@ func (p *Proxy) ServeArchive(w http.ResponseWriter, r *http.Request) {
 	charset := r.URL.Query().Get(charset)
 	index := r.URL.Query().Get(fileIndex)
 
-	var reader *ranger.Reader
+	var reader *ranger.RingBuffReader
 
 	if targetUrl == "" {
 		fmt.Fprintf(w, "url must not empty!")

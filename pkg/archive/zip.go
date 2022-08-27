@@ -7,13 +7,9 @@ import (
 	"io"
 )
 
-
-func ListZipFiles(r *ranger.Reader, charset string) (files []string, err error) {
+func ListZipFiles(r *ranger.RingBuffReader, charset string) (files []string, err error) {
 	fileNames := make([]string, 0, 10)
-	lenth, err := r.Length()
-	if err != nil {
-		return nil, err
-	}
+	lenth:= r.Length
 	zipReader, err := zip.NewReader(r, lenth)
 	if err != nil {
 		return fileNames, err
@@ -34,11 +30,8 @@ func ListZipFiles(r *ranger.Reader, charset string) (files []string, err error) 
 	return fileNames, nil
 }
 
-func UnzipByFileName(r *ranger.Reader, name string, charset string) (io.Reader, error) {
-	lenth, err := r.Length()
-	if err != nil {
-		return nil, err
-	}
+func UnzipByFileName(r *ranger.RingBuffReader, name string, charset string) (io.Reader, error) {
+	lenth:= r.Length
 	zipReader, err := zip.NewReader(r, lenth)
 	if err != nil {
 		return nil, err
@@ -59,11 +52,8 @@ func UnzipByFileName(r *ranger.Reader, name string, charset string) (io.Reader, 
 
 }
 
-func UnzipByFileIndex(r *ranger.Reader, index int) (io.Reader, error) {
-	lenth, err := r.Length()
-	if err != nil {
-		return nil, err
-	}
+func UnzipByFileIndex(r *ranger.RingBuffReader, index int) (io.Reader, error) {
+	lenth:= r.Length
 	zipReader, err := zip.NewReader(r, lenth)
 	if err != nil {
 		return nil, err
@@ -76,4 +66,3 @@ func UnzipByFileIndex(r *ranger.Reader, index int) (io.Reader, error) {
 	}
 	return zipReader.File[index].Open()
 }
-
