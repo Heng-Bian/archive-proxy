@@ -6,8 +6,6 @@ import (
 )
 
 var defaultBuffSize = 1024 * 512
-var defaultFetchSize = 1024 * 128
-var defaultRoutinesize = 2
 
 type RingBuffReader struct {
 	// the range fetcher with which to download blocks
@@ -17,12 +15,8 @@ type RingBuffReader struct {
 	readPoint  int64
 	writePoint int64
 
-	Length int64
-
-	//suggested parameter (buffSzie = N * fetchSize * routineSize, N is integer)
-	buffSize    int
-	fetchSize   int
-	routineSize int
+	Length   int64
+	buffSize int
 }
 
 // ReadAt reads len(p) bytes from the ranged-over source.
@@ -43,7 +37,11 @@ func (r *RingBuffReader) ReadAt(p []byte, off int64) (int, error) {
 // It returns the number of bytes read and the error, if any.
 // EOF is signaled by a zero count with err set to io.EOF.
 func (r *RingBuffReader) Read(p []byte) (int, error) {
+	if r.readPoint >= r.Length {
+		return 0, io.EOF
+	}
 	distance := r.writePoint - r.readPoint
+
 	// all the zone is [-length,0](0,buffSize](buffSize,length]
 	// (0,buffSize]
 	if distance > 0 && distance <= int64(r.buffSize) {
@@ -72,7 +70,10 @@ func (r *RingBuffReader) Read(p []byte) (int, error) {
 	} else {
 		// (buffSize,length] U [-length,0)
 		r.writePoint = r.readPoint
-		r.fillBuff()
+		err := r.fillBuff()
+		if err != nil {
+			return 0, nil
+		}
 		return r.Read(p)
 	}
 }
@@ -135,41 +136,21 @@ func (r *RingBuffReader) fillBuff() error {
 		fillSize := r.buffSize - int(distance)
 		httpRangeStart := r.writePoint
 		httpRangeEnd := r.writePoint + int64(fillSize) - 1
-		ranges := make([]ByteRange, 0, 5)
-		rangeIndex := httpRangeStart
-		i := 0
-		for {
-			if httpRangeEnd-rangeIndex+1 > int64(r.fetchSize) {
-				byteRange := ByteRange{
-					Start: rangeIndex,
-					End:   rangeIndex + int64(r.fetchSize) - 1,
-				}
-				if byteRange.End == httpRangeEnd {
-					break
-				}
-				rangeIndex = byteRange.End + 1
-				ranges = append(ranges, byteRange)
-			} else {
-				byteRange := ByteRange{
-					Start: rangeIndex,
-					End:   httpRangeEnd,
-				}
-				ranges = append(ranges, byteRange)
-				break
-			}
-			i++
+		ranges := make([]ByteRange, 0, 1)
+		byteRange := ByteRange{
+			Start: httpRangeStart,
+			End:   httpRangeEnd,
 		}
-		
+		ranges = append(ranges, byteRange)
 		blocks, err := r.fetcher.FetchRanges(ranges)
 		if err != nil {
 			return err
 		}
-		for _, value := range blocks {
-			writeIndex := r.writePoint % int64(r.buffSize)
-			readIndex := r.readPoint % int64(r.buffSize)
-			length := ringWrite(value.Data[:value.Length], r.buff, int(readIndex), int(writeIndex))
-			r.writePoint = r.writePoint + int64(length)
-		}
+		value := blocks[0]
+		writeIndex := r.writePoint % int64(r.buffSize)
+		readIndex := r.readPoint % int64(r.buffSize)
+		length := ringWrite(value.Data[:value.Length], r.buff, int(readIndex), int(writeIndex))
+		r.writePoint = r.writePoint + int64(length)
 		return nil
 	}
 	// distance [buffSize,buffSize]
@@ -187,40 +168,23 @@ func (r *RingBuffReader) fillBuff() error {
 
 func NewRingBuffReader(fetcher RangeFetcher, size ...int) (*RingBuffReader, error) {
 	r := &RingBuffReader{
-		fetcher:     fetcher,
-		buffSize:    defaultBuffSize,
-		fetchSize:   defaultBuffSize,
-		routineSize: defaultRoutinesize,
+		fetcher:  fetcher,
+		buffSize: defaultBuffSize,
 	}
-	for index, value := range size {
-		switch index {
-		case 0:
-			r.buffSize = value
-		case 1:
-			r.fetchSize = value
-		case 2:
-			r.routineSize = value
-		}
+	if len(size) > 0 {
+		r.buffSize = size[0]
 	}
 	if r.buffSize <= 0 {
 		return r, errors.New("buff size must be greater than 0")
 	}
-	if r.fetchSize <= 0 {
-		return r, errors.New("fetch size must be greater than 0")
-	}
-	if r.routineSize <= 0 {
-		return r, errors.New("routine size must be greater than 0")
-	}
-	if r.buffSize < r.fetchSize {
-		return r, errors.New("buff size must be greater than or equal to fetch size")
-	}
-	r.fetcher.ExpectedLength()
-
 	length, err := r.fetcher.ExpectedLength()
 	if err != nil {
 		return r, err
 	}
+	if length <= 0 {
+		return nil,errors.New("resource is empty")
+	}
 	r.Length = length
-	r.buff = make([]byte, r.buffSize, r.buffSize)
+	r.buff = make([]byte, r.buffSize)
 	return r, nil
 }
