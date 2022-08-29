@@ -46,8 +46,8 @@ func (r *RingBuffReader) Read(p []byte) (int, error) {
 	// (0,buffSize]
 	if distance > 0 && distance <= int64(r.buffSize) {
 		readIndex := r.readPoint % int64(r.buffSize)
-		writeIndex := r.readPoint % int64(r.buffSize)
-		if len(p) < int(distance) {
+		writeIndex := r.writePoint % int64(r.buffSize)
+		if len(p) <= int(distance) {
 			length := ringRead(p, r.buff, int(readIndex), int(writeIndex))
 			r.readPoint = r.readPoint + int64(length)
 			if r.readPoint >= r.Length {
@@ -65,7 +65,8 @@ func (r *RingBuffReader) Read(p []byte) (int, error) {
 			if err != nil {
 				return length, err
 			}
-			return r.Read(p[length:])
+			count, err := r.Read(p[length:])
+			return length + count, err
 		}
 	} else {
 		// (buffSize,length] U [-length,0)
@@ -136,6 +137,9 @@ func (r *RingBuffReader) fillBuff() error {
 		fillSize := r.buffSize - int(distance)
 		httpRangeStart := r.writePoint
 		httpRangeEnd := r.writePoint + int64(fillSize) - 1
+		if httpRangeEnd > r.Length-1 {
+			httpRangeEnd = r.Length - 1
+		}
 		ranges := make([]ByteRange, 0, 1)
 		byteRange := ByteRange{
 			Start: httpRangeStart,
@@ -182,7 +186,7 @@ func NewRingBuffReader(fetcher RangeFetcher, size ...int) (*RingBuffReader, erro
 		return r, err
 	}
 	if length <= 0 {
-		return nil,errors.New("resource is empty")
+		return nil, errors.New("resource is empty")
 	}
 	r.Length = length
 	r.buff = make([]byte, r.buffSize)
