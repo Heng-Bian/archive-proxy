@@ -121,8 +121,8 @@ func (p *Proxy) ServeArchive(w http.ResponseWriter, r *http.Request) {
 	} else {
 		r, err := archive.UrlToReader(targetUrl, p.Client)
 		if err != nil {
-			fmt.Fprintf(w, "fail to crete reader from given url,err:%s", err)
 			w.WriteHeader(500)
+			fmt.Fprintf(w, "fail to crete reader from given url,err:%s", err)
 			return
 		} else {
 			reader = r

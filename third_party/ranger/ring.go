@@ -37,39 +37,14 @@ func (r *RingBuffReader) ReadAt(p []byte, off int64) (int, error) {
 // It returns the number of bytes read and the error, if any.
 // EOF is signaled by a zero count with err set to io.EOF.
 func (r *RingBuffReader) Read(p []byte) (int, error) {
+	distance := r.writePoint - r.readPoint
 	if r.readPoint >= r.Length {
 		return 0, io.EOF
 	}
-	distance := r.writePoint - r.readPoint
-
 	// all the zone is [-length,0](0,buffSize](buffSize,length]
-	// (0,buffSize]
-	if distance > 0 && distance <= int64(r.buffSize) {
-		readIndex := r.readPoint % int64(r.buffSize)
-		writeIndex := r.writePoint % int64(r.buffSize)
-		if len(p) <= int(distance) {
-			length := ringRead(p, r.buff, int(readIndex), int(writeIndex))
-			r.readPoint = r.readPoint + int64(length)
-			if r.readPoint >= r.Length {
-				return length, io.EOF
-			} else {
-				return length, nil
-			}
-		} else {
-			length := ringRead(p, r.buff, int(readIndex), int(writeIndex))
-			r.readPoint = r.readPoint + int64(length)
-			if r.readPoint >= r.Length {
-				return length, io.EOF
-			}
-			err := r.fillBuff()
-			if err != nil {
-				return length, err
-			}
-			count, err := r.Read(p[length:])
-			return length + count, err
-		}
-	} else {
-		// (buffSize,length] U [-length,0)
+
+	// (buffSize,length] U [-length,0]
+	if distance <= 0 || distance > int64(r.buffSize) {
 		r.writePoint = r.readPoint
 		err := r.fillBuff()
 		if err != nil {
@@ -77,6 +52,32 @@ func (r *RingBuffReader) Read(p []byte) (int, error) {
 		}
 		return r.Read(p)
 	}
+
+	// (0,buffSize]
+	readIndex := r.readPoint % int64(r.buffSize)
+	writeIndex := r.writePoint % int64(r.buffSize)
+	if len(p) <= int(distance) {
+		length := ringRead(p, r.buff, int(readIndex), int(writeIndex))
+		r.readPoint = r.readPoint + int64(length)
+		if r.readPoint >= r.Length {
+			return length, io.EOF
+		} else {
+			return length, nil
+		}
+	}
+	// len(p) > distance
+	length := ringRead(p, r.buff, int(readIndex), int(writeIndex))
+	r.readPoint = r.readPoint + int64(length)
+	if r.readPoint >= r.Length {
+		return length, io.EOF
+	}
+	err := r.fillBuff()
+	if err != nil {
+		return length, err
+	}
+	count, err := r.Read(p[length:])
+	return length + count, err
+
 }
 
 // Seek sets the offset for the next Read to offset, interpreted
@@ -127,47 +128,49 @@ func ringWrite(p []byte, ringBuff []byte, readIndex int, writeIndex int) int {
 }
 
 func (r *RingBuffReader) fillBuff() error {
+	distance := r.writePoint - r.readPoint
 	if r.writePoint >= r.Length {
 		//reach the end
 		return nil
 	}
-	distance := r.writePoint - r.readPoint
-	// distance [0,buffSize)
-	if distance >= 0 && distance < int64(r.buffSize) {
-		fillSize := r.buffSize - int(distance)
-		httpRangeStart := r.writePoint
-		httpRangeEnd := r.writePoint + int64(fillSize) - 1
-		if httpRangeEnd > r.Length-1 {
-			httpRangeEnd = r.Length - 1
-		}
-		ranges := make([]ByteRange, 0, 1)
-		byteRange := ByteRange{
-			Start: httpRangeStart,
-			End:   httpRangeEnd,
-		}
-		ranges = append(ranges, byteRange)
-		blocks, err := r.fetcher.FetchRanges(ranges)
-		if err != nil {
-			return err
-		}
-		value := blocks[0]
-		writeIndex := r.writePoint % int64(r.buffSize)
-		readIndex := r.readPoint % int64(r.buffSize)
-		length := ringWrite(value.Data[:value.Length], r.buff, int(readIndex), int(writeIndex))
-		r.writePoint = r.writePoint + int64(length)
-		return nil
-	}
+
 	// distance [buffSize,buffSize]
 	if distance == int64(r.buffSize) {
 		//no need to fill
 		return nil
 	}
+
 	// distance (-∞,0) U (buffSize,+∞)
 	if distance > int64(r.buffSize) {
 		r.writePoint = r.readPoint
 		return r.fillBuff()
 	}
+
+	// distance [0,buffSize)
+
+	fillSize := r.buffSize - int(distance)
+	httpRangeStart := r.writePoint
+	httpRangeEnd := r.writePoint + int64(fillSize) - 1
+	if httpRangeEnd > r.Length-1 {
+		httpRangeEnd = r.Length - 1
+	}
+	ranges := make([]ByteRange, 0, 1)
+	byteRange := ByteRange{
+		Start: httpRangeStart,
+		End:   httpRangeEnd,
+	}
+	ranges = append(ranges, byteRange)
+	blocks, err := r.fetcher.FetchRanges(ranges)
+	if err != nil {
+		return err
+	}
+	value := blocks[0]
+	writeIndex := r.writePoint % int64(r.buffSize)
+	readIndex := r.readPoint % int64(r.buffSize)
+	length := ringWrite(value.Data[:value.Length], r.buff, int(readIndex), int(writeIndex))
+	r.writePoint = r.writePoint + int64(length)
 	return nil
+
 }
 
 func NewRingBuffReader(fetcher RangeFetcher, size ...int) (*RingBuffReader, error) {
