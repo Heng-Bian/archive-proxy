@@ -7,7 +7,7 @@ import (
 	"io"
 )
 
-func ListRarFiles(r  *ranger.RingBuffReader) (files []string, err error) {
+func ListRarFiles(r  *ranger.Reader) (files []string, err error) {
 	fileNames := make([]string, 0, 10)
 	rarReader, err := rardecode.NewReader(r)
 	if err != nil {
@@ -27,7 +27,7 @@ func ListRarFiles(r  *ranger.RingBuffReader) (files []string, err error) {
 	}
 }
 
-func UnRarByFileName(r *ranger.RingBuffReader, name string) (io.Reader, error) {
+func UnRarByFileName(r *ranger.Reader, name string) (io.Reader, error) {
 	rarReader, err := rardecode.NewReader(r)
 	if err != nil {
 		return nil, err
@@ -48,7 +48,7 @@ func UnRarByFileName(r *ranger.RingBuffReader, name string) (io.Reader, error) {
 	}
 }
 
-func UnRarByFileIndex(r *ranger.RingBuffReader, index int) (io.Reader, error) {
+func UnRarByFileIndex(r *ranger.Reader, index int) (io.Reader, error) {
 	rarReader, err := rardecode.NewReader(r)
 	if err != nil {
 		return nil, err
