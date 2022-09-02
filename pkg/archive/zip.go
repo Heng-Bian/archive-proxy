@@ -3,7 +3,7 @@ package archive
 import (
 	"archive/zip"
 	"errors"
-	"github.com/Heng-Bian/archive-proxy/third_party/ranger"
+	"github.com/Heng-Bian/ranger"
 	"io"
 )
 

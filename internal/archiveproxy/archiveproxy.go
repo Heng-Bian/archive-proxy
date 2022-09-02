@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"github.com/Heng-Bian/archive-proxy/pkg/archive"
-	"github.com/Heng-Bian/archive-proxy/third_party/ranger"
+	"github.com/Heng-Bian/ranger"
 	"github.com/ulikunitz/xz"
 )
 

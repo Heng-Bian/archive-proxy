@@ -5,7 +5,7 @@ import (
 	"errors"
 	"io"
 
-	"github.com/Heng-Bian/archive-proxy/third_party/ranger"
+	"github.com/Heng-Bian/ranger"
 )
 
 func ListTarFiles(r  *ranger.Reader, charset string) (files []string, err error) {

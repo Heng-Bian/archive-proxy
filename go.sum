@@ -1,3 +1,5 @@
+github.com/Heng-Bian/ranger v0.0.0-20220901160000-36a7bd8fd2d0 h1:gihMTEB/2XI2rWGp9KHqVtBD6IG0KZPTJtekBCE/mxg=
+github.com/Heng-Bian/ranger v0.0.0-20220901160000-36a7bd8fd2d0/go.mod h1:GVx1AVlnzOxutZk7Jk5UGiGhCDSO1l+1oKn2BI89vK0=
 github.com/gabriel-vasile/mimetype v1.4.1 h1:TRWk7se+TOjCYgRth7+1/OYLNiRNIotknkFtf/dnN7Q=
 github.com/gabriel-vasile/mimetype v1.4.1/go.mod h1:05Vi0w3Y9c/lNvJOdmIwvrrAhX3rYhfQQCaf9VJcv7M=
 github.com/nwaples/rardecode/v2 v2.0.0-beta.2 h1:e3mzJFJs4k83GXBEiTaQ5HgSc/kOK8q0rDaRO0MPaOk=

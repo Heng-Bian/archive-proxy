@@ -2,7 +2,7 @@ package archive
 
 import (
 	"errors"
-	"github.com/Heng-Bian/archive-proxy/third_party/ranger"
+	"github.com/Heng-Bian/ranger"
 	rardecode "github.com/nwaples/rardecode/v2"
 	"io"
 )

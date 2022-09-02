@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/Heng-Bian/archive-proxy/third_party/ranger"
+	"github.com/Heng-Bian/ranger"
 	"github.com/gabriel-vasile/mimetype"
 	"golang.org/x/text/encoding/ianaindex"
 )
