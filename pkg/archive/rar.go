@@ -2,12 +2,12 @@ package archive
 
 import (
 	"errors"
-	"github.com/Heng-Bian/ranger"
+	"github.com/Heng-Bian/httpreader"
 	rardecode "github.com/nwaples/rardecode/v2"
 	"io"
 )
 
-func ListRarFiles(r  *ranger.Reader) (files []string, err error) {
+func ListRarFiles(r  *httpreader.Reader) (files []string, err error) {
 	fileNames := make([]string, 0, 10)
 	rarReader, err := rardecode.NewReader(r)
 	if err != nil {
@@ -27,7 +27,7 @@ func ListRarFiles(r  *ranger.Reader) (files []string, err error) {
 	}
 }
 
-func UnRarByFileName(r *ranger.Reader, name string) (io.Reader, error) {
+func UnRarByFileName(r *httpreader.Reader, name string) (io.Reader, error) {
 	rarReader, err := rardecode.NewReader(r)
 	if err != nil {
 		return nil, err
@@ -48,7 +48,7 @@ func UnRarByFileName(r *ranger.Reader, name string) (io.Reader, error) {
 	}
 }
 
-func UnRarByFileIndex(r *ranger.Reader, index int) (io.Reader, error) {
+func UnRarByFileIndex(r *httpreader.Reader, index int) (io.Reader, error) {
 	rarReader, err := rardecode.NewReader(r)
 	if err != nil {
 		return nil, err

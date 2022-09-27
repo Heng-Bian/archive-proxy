@@ -2,12 +2,11 @@ package archive
 
 import (
 	"io"
-
-	"github.com/Heng-Bian/ranger"
+	"github.com/Heng-Bian/httpreader"
 	"github.com/saracen/go7z"
 )
 
-func List7zFiles(r *ranger.Reader) (files []string, err error) {
+func List7zFiles(r *httpreader.Reader) (files []string, err error) {
 	fileNames := make([]string, 0, 10)
 	length:= r.Length
 	reader, err := go7z.NewReader(r, length)
@@ -28,7 +27,7 @@ func List7zFiles(r *ranger.Reader) (files []string, err error) {
 	}
 }
 
-func Un7zByFileName(r *ranger.Reader, name string) (io.Reader, error) {
+func Un7zByFileName(r *httpreader.Reader, name string) (io.Reader, error) {
 	length:= r.Length
 
 	reader, err := go7z.NewReader(r, length)
@@ -51,7 +50,7 @@ func Un7zByFileName(r *ranger.Reader, name string) (io.Reader, error) {
 	}
 }
 
-func Un7zByFileIndex(r *ranger.Reader, index int) (io.Reader, error) {
+func Un7zByFileIndex(r *httpreader.Reader, index int) (io.Reader, error) {
 	length:= r.Length
 
 	reader, err := go7z.NewReader(r, length)

@@ -4,11 +4,10 @@ import (
 	"archive/tar"
 	"errors"
 	"io"
-
-	"github.com/Heng-Bian/ranger"
+	"github.com/Heng-Bian/httpreader"
 )
 
-func ListTarFiles(r  *ranger.Reader, charset string) (files []string, err error) {
+func ListTarFiles(r  *httpreader.Reader, charset string) (files []string, err error) {
 	fileNames := make([]string, 0, 10)
 	tarReader := tar.NewReader(r)
 	for {
@@ -32,7 +31,7 @@ func ListTarFiles(r  *ranger.Reader, charset string) (files []string, err error)
 	}
 }
 
-func UnTarByFileName(r *ranger.Reader, name string, charset string) (io.Reader, error) {
+func UnTarByFileName(r *httpreader.Reader, name string, charset string) (io.Reader, error) {
 	tarReader := tar.NewReader(r)
 	for {
 		header, err := tarReader.Next()
@@ -57,7 +56,7 @@ func UnTarByFileName(r *ranger.Reader, name string, charset string) (io.Reader, 
 	}
 }
 
-func UnTarByFileIndex(r *ranger.Reader, index int) (io.Reader, error) {
+func UnTarByFileIndex(r *httpreader.Reader, index int) (io.Reader, error) {
 	tarReader := tar.NewReader(r)
 	var count int
 	for {

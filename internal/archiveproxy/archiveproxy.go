@@ -8,13 +8,14 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
-
 	"github.com/Heng-Bian/archive-proxy/pkg/archive"
-	"github.com/Heng-Bian/ranger"
+	"github.com/Heng-Bian/httpreader"
 	"github.com/ulikunitz/xz"
 )
 
@@ -112,11 +113,11 @@ func (p *Proxy) ServeArchive(w http.ResponseWriter, r *http.Request) {
 	charset := r.URL.Query().Get(charset)
 	index := r.URL.Query().Get(fileIndex)
 
-	var reader *ranger.Reader
+	var reader *httpreader.Reader
 
 	if targetUrl == "" {
-		fmt.Fprintf(w, "url must not empty!")
 		w.WriteHeader(500)
+		fmt.Fprintf(w, "url must not empty!")
 		return
 	} else {
 		r, err := archive.UrlToReader(targetUrl, p.Client)
@@ -131,8 +132,8 @@ func (p *Proxy) ServeArchive(w http.ResponseWriter, r *http.Request) {
 	if fileFormat == "" {
 		mimeType, err := archive.DetectMimeTypeThenSeek(reader)
 		if err != nil {
-			fmt.Fprintf(w, "fail to detect file type,err:%s", err)
 			w.WriteHeader(500)
+			fmt.Fprintf(w, "fail to detect file type,err:%s", err)
 			return
 		}
 		fileFormat = archive.MineTypeTransform(mimeType)
@@ -235,9 +236,20 @@ func (p *Proxy) Serve404(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotFound)
 }
 
-// security check before handle requests
-func (p *Proxy) PreCheck(w http.ResponseWriter, r *http.Request) {
-	//TODO
+// proxied url check
+func (p *Proxy) hostCheck(u *url.URL) error {
+	targetUrl := u.Query().Get(targetUrl)
+	tu, err := url.Parse(targetUrl)
+	if err != nil {
+		return errors.New("invalid target url:" + targetUrl)
+	}
+	if len(p.AllowHosts) > 0 && !hostMatches(p.AllowHosts, tu) {
+		return errors.New("Host not allowed")
+	}
+	if len(p.DenyHosts) > 0 && hostMatches(p.AllowHosts, tu) {
+		return errors.New("Host denied")
+	}
+	return nil
 
 }
 
@@ -263,4 +275,28 @@ func writeStream(w http.ResponseWriter, r io.Reader, err error) {
 		return
 	}
 	io.Copy(w, r)
+}
+
+// hostMatches returns whether the host in u matches one of hosts.
+func hostMatches(hosts []string, u *url.URL) bool {
+	for _, host := range hosts {
+		if u.Hostname() == host {
+			return true
+		}
+		if strings.HasPrefix(host, "*.") && strings.HasSuffix(u.Hostname(), host[2:]) {
+			return true
+		}
+		// Checks whether the host in u is an IP
+		if ip := net.ParseIP(u.Hostname()); ip != nil {
+			// Checks whether our current host is a CIDR
+			if _, ipnet, err := net.ParseCIDR(host); err == nil {
+				// Checks if our host contains the IP in u
+				if ipnet.Contains(ip) {
+					return true
+				}
+			}
+		}
+	}
+
+	return false
 }

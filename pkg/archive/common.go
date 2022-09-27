@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/Heng-Bian/ranger"
+	"github.com/Heng-Bian/httpreader"
 	"github.com/gabriel-vasile/mimetype"
 	"golang.org/x/text/encoding/ianaindex"
 )
@@ -88,7 +88,7 @@ func DetectMimeTypeThenSeek(r io.Reader) (string, error) {
 	return mime.String(), nil
 }
 
-func UrlToReader(httpUrl string, client *http.Client) (*ranger.Reader, error) {
+func UrlToReader(httpUrl string, client *http.Client) (*httpreader.Reader, error) {
 	if client == nil {
 		client = defaultClient
 	}
@@ -96,11 +96,8 @@ func UrlToReader(httpUrl string, client *http.Client) (*ranger.Reader, error) {
 	if err != nil {
 		return nil, err
 	}
-	httpRanger := &ranger.HTTPRanger{
-		Client: client,
-		URL:    url,
-	}
-	reader, err := ranger.NewReader(httpRanger)
+	option:=httpreader.WithClient(client)
+	reader, err := httpreader.NewReader(url,option)
 	if err != nil {
 		return nil, err
 	}

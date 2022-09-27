@@ -3,11 +3,11 @@ package archive
 import (
 	"archive/zip"
 	"errors"
-	"github.com/Heng-Bian/ranger"
 	"io"
+	"github.com/Heng-Bian/httpreader"
 )
 
-func ListZipFiles(r *ranger.Reader, charset string) (files []string, err error) {
+func ListZipFiles(r *httpreader.Reader, charset string) (files []string, err error) {
 	fileNames := make([]string, 0, 10)
 	lenth:= r.Length
 	zipReader, err := zip.NewReader(r, lenth)
@@ -30,7 +30,7 @@ func ListZipFiles(r *ranger.Reader, charset string) (files []string, err error) 
 	return fileNames, nil
 }
 
-func UnzipByFileName(r *ranger.Reader, name string, charset string) (io.Reader, error) {
+func UnzipByFileName(r *httpreader.Reader, name string, charset string) (io.Reader, error) {
 	lenth:= r.Length
 	zipReader, err := zip.NewReader(r, lenth)
 	if err != nil {
@@ -52,7 +52,7 @@ func UnzipByFileName(r *ranger.Reader, name string, charset string) (io.Reader, 
 
 }
 
-func UnzipByFileIndex(r *ranger.Reader, index int) (io.Reader, error) {
+func UnzipByFileIndex(r *httpreader.Reader, index int) (io.Reader, error) {
 	lenth:= r.Length
 	zipReader, err := zip.NewReader(r, lenth)
 	if err != nil {

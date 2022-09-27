@@ -1,3 +1,5 @@
+github.com/Heng-Bian/httpreader v1.0.1 h1:Z8KlCZYjYrXFwmWBaE2NL8OADLZrG7lT+N9KuTrzLPc=
+github.com/Heng-Bian/httpreader v1.0.1/go.mod h1:nyz32PGb0KEgoUBmBPtpSUC1TfluTOX41aK2knyjggI=
 github.com/Heng-Bian/ranger v0.0.0-20220901160000-36a7bd8fd2d0 h1:gihMTEB/2XI2rWGp9KHqVtBD6IG0KZPTJtekBCE/mxg=
 github.com/Heng-Bian/ranger v0.0.0-20220901160000-36a7bd8fd2d0/go.mod h1:GVx1AVlnzOxutZk7Jk5UGiGhCDSO1l+1oKn2BI89vK0=
 github.com/gabriel-vasile/mimetype v1.4.1 h1:TRWk7se+TOjCYgRth7+1/OYLNiRNIotknkFtf/dnN7Q=
