@@ -6,6 +6,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/Heng-Bian/archive-proxy/pkg/archive"
+	"github.com/Heng-Bian/httpreader"
+	"github.com/ulikunitz/xz"
 	"io"
 	"log"
 	"net"
@@ -13,10 +16,6 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
-	"time"
-	"github.com/Heng-Bian/archive-proxy/pkg/archive"
-	"github.com/Heng-Bian/httpreader"
-	"github.com/ulikunitz/xz"
 )
 
 const (
@@ -25,6 +24,12 @@ const (
 	charset    = "charset"
 	fileIndex  = "index"
 	fileFormat = "format"
+)
+
+var (
+	errReferrer   = errors.New("request does not contain an allowed referrer")
+	errDeniedHost = errors.New("request contains a denied host")
+	errNotAllowed = errors.New("requested URL is not allowed")
 )
 
 type ArchiveStruct struct {
@@ -53,19 +58,8 @@ type Proxy struct {
 	// is included in remote requests.
 	IncludeReferer bool
 
-	// FollowRedirects controls whether archiveproxy will follow redirects or not.
-	FollowRedirects bool
-
 	// The Logger used by the archive proxy
 	Logger *log.Logger
-
-	// Timeout specifies a time limit for requests served by this Proxy.
-	// If a call runs for longer than its time limit, a 504 Gateway Timeout
-	// response is returned.  A Timeout of zero means no timeout.
-	Timeout time.Duration
-
-	// The User-Agent used by archiveproxy when requesting origin archive
-	UserAgent string
 
 	// PassRequestHeaders identifies HTTP headers to pass from inbound
 	// requests to the proxied server.
@@ -84,19 +78,16 @@ func (p *Proxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path == "/favicon.ico" {
 		return // ignore favicon requests
 	}
-
+	err := p.allowed(r)
+	if err != nil {
+		w.WriteHeader(500)
+		fmt.Fprintf(w, "fail to proxy,err:%s", err)
+		return
+	}
 	if strings.HasPrefix(r.URL.Path, "/healthz") {
-
 		handler = http.HandlerFunc(p.ServeHealthCheck)
-
-	} else if strings.HasPrefix(r.URL.Path, "/list") {
-
+	} else if strings.HasPrefix(r.URL.Path, "/list") || strings.HasPrefix(r.URL.Path, "/stream") {
 		handler = http.HandlerFunc(p.ServeArchive)
-
-	} else if strings.HasPrefix(r.URL.Path, "/stream") {
-
-		handler = http.HandlerFunc(p.ServeArchive)
-
 	} else {
 		handler = http.HandlerFunc(p.Serve404)
 	}
@@ -128,6 +119,13 @@ func (p *Proxy) ServeArchive(w http.ResponseWriter, r *http.Request) {
 		} else {
 			reader = r
 		}
+	}
+	if p.IncludeReferer {
+		// pass along the referer header from the original request
+		copyHeader(reader.Header, r.Header, "referer")
+	}
+	if len(p.PassRequestHeaders) != 0 {
+		copyHeader(reader.Header, r.Header, p.PassRequestHeaders...)
 	}
 	if fileFormat == "" {
 		mimeType, err := archive.DetectMimeTypeThenSeek(reader)
@@ -236,21 +234,25 @@ func (p *Proxy) Serve404(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotFound)
 }
 
-// proxied url check
-func (p *Proxy) hostCheck(u *url.URL) error {
-	targetUrl := u.Query().Get(targetUrl)
-	tu, err := url.Parse(targetUrl)
+// allowed determines whether the specified request contains an allowed
+// referrer and host.  It returns an error if the request is not
+// allowed.
+func (p *Proxy) allowed(requst *http.Request) error {
+	targetUrl := requst.URL.Query().Get(targetUrl)
+	u, err := url.Parse(targetUrl)
 	if err != nil {
 		return errors.New("invalid target url:" + targetUrl)
 	}
-	if len(p.AllowHosts) > 0 && !hostMatches(p.AllowHosts, tu) {
-		return errors.New("Host not allowed")
+	if len(p.AllowHosts) > 0 && !hostMatches(p.AllowHosts, u) {
+		return errNotAllowed
 	}
-	if len(p.DenyHosts) > 0 && hostMatches(p.AllowHosts, tu) {
-		return errors.New("Host denied")
+	if len(p.DenyHosts) > 0 && hostMatches(p.AllowHosts, u) {
+		return errDeniedHost
+	}
+	if len(p.Referrers) > 0 && !referrerMatches(p.Referrers, requst) {
+		return errReferrer
 	}
 	return nil
-
 }
 
 func writeRes(w http.ResponseWriter, res ArchiveStruct, err error) {
@@ -299,4 +301,24 @@ func hostMatches(hosts []string, u *url.URL) bool {
 	}
 
 	return false
+}
+
+// returns whether the referrer from the request is in the host list.
+func referrerMatches(hosts []string, r *http.Request) bool {
+	u, err := url.Parse(r.Header.Get("Referer"))
+	if err != nil { // malformed or blank header, just deny
+		return false
+	}
+	return hostMatches(hosts, u)
+}
+
+// copyHeader copies values for specified headers from src to dst, adding to
+// any existing values with the same header name.
+func copyHeader(dst, src http.Header, headerNames ...string) {
+	for _, name := range headerNames {
+		k := http.CanonicalHeaderKey(name)
+		for _, v := range src[k] {
+			dst.Add(k, v)
+		}
+	}
 }
