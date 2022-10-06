@@ -261,7 +261,7 @@ func writeRes(w http.ResponseWriter, res ArchiveStruct, err error) {
 		fmt.Fprint(w, err.Error())
 		return
 	}
-	jsonBytes, err := json.Marshal(res)
+	jsonBytes, err := json.MarshalIndent(res, "", "\t")
 	if err != nil {
 		w.WriteHeader(500)
 		fmt.Fprint(w, err.Error())
