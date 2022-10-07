@@ -1,6 +1,6 @@
 module github.com/Heng-Bian/archive-proxy
 
-go 1.19
+go 1.18
 
 require (
 	github.com/gabriel-vasile/mimetype v1.2.0
