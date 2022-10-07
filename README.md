@@ -68,7 +68,7 @@ binary stream
 ### Build
 ```
 git clone https://github.com/Heng-Bian/archive-proxy.git
-cd archive-proxy\cmd\archive-server
+cd archive-proxy/cmd/archive-server
 go build
 ```
 ###  Run
