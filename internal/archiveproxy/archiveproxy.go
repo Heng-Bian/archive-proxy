@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/Heng-Bian/archive-proxy/pkg/archive"
-	"github.com/Heng-Bian/httpreader"
 	"github.com/ulikunitz/xz"
 	"io"
 	"log"
@@ -103,23 +102,18 @@ func (p *Proxy) ServeArchive(w http.ResponseWriter, r *http.Request) {
 	fileFormat := r.URL.Query().Get(fileFormat)
 	charset := r.URL.Query().Get(charset)
 	index := r.URL.Query().Get(fileIndex)
-
-	var reader *httpreader.Reader
-
 	if targetUrl == "" {
 		w.WriteHeader(500)
 		fmt.Fprintf(w, "url must not empty!")
 		return
-	} else {
-		r, err := archive.UrlToReader(targetUrl, p.Client)
-		if err != nil {
-			w.WriteHeader(500)
-			fmt.Fprintf(w, "fail to crete reader from given url,err:%s", err)
-			return
-		} else {
-			reader = r
-		}
 	}
+	reader, err := archive.UrlToReader(targetUrl, p.Client)
+	if err != nil {
+		w.WriteHeader(500)
+		fmt.Fprintf(w, "fail to crete reader from given url,err:%s", err)
+		return
+	}
+	defer reader.Close()
 	if p.IncludeReferer {
 		// pass along the referer header from the original request
 		copyHeader(reader.Header, r.Header, "referer")
