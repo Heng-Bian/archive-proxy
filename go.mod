@@ -16,6 +16,6 @@ require (
 )
 
 require (
-	github.com/Heng-Bian/httpreader v1.0.1
+	github.com/Heng-Bian/httpreader v1.1.0
 	github.com/saracen/go7z v0.0.0-20191010121135-9c09b6bd7fda
 )
