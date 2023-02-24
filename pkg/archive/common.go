@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"sort"
 
 	"github.com/Heng-Bian/httpreader"
 	"github.com/gabriel-vasile/mimetype"
@@ -96,8 +97,8 @@ func UrlToReader(httpUrl string, client *http.Client) (*httpreader.Reader, error
 	if err != nil {
 		return nil, err
 	}
-	option:=httpreader.WithClient(client)
-	reader, err := httpreader.NewReader(url,option)
+	option := httpreader.WithClient(client)
+	reader, err := httpreader.NewReader(url, option)
 	if err != nil {
 		return nil, err
 	}
@@ -114,4 +115,13 @@ func DecodeString(src string, name string) (string, error) {
 		return "", err
 	}
 	return target, nil
+}
+
+func Exists(sorted []string, str string) bool {
+	i := sort.SearchStrings(sorted, str)
+	if i != len(sorted) {
+		return str == sorted[i]
+	} else {
+		return false
+	}
 }
