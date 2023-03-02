@@ -1,13 +1,16 @@
 package archive
 
 import (
+	"archive/zip"
 	"errors"
+	"io"
+	"sort"
+
 	"github.com/Heng-Bian/httpreader"
 	rardecode "github.com/nwaples/rardecode/v2"
-	"io"
 )
 
-func ListRarFiles(r  *httpreader.Reader) (files []string, err error) {
+func ListRarFiles(r *httpreader.Reader) (files []string, err error) {
 	fileNames := make([]string, 0, 10)
 	rarReader, err := rardecode.NewReader(r)
 	if err != nil {
@@ -68,5 +71,32 @@ func UnRarByFileIndex(r *httpreader.Reader, index int) (io.Reader, error) {
 			return rarReader, nil
 		}
 		count++
+	}
+}
+
+func RarToZip(w io.Writer, r *httpreader.Reader, names []string) error {
+	rarReader, err := rardecode.NewReader(r)
+	if err != nil {
+		return err
+	}
+	zipWriter := zip.NewWriter(w)
+	sort.Strings(names)
+	for {
+		header, err := rarReader.Next()
+		if err != nil {
+			zipWriter.Close()
+			//io.EOF is not a error
+			if err == io.EOF {
+				return nil
+			} else {
+				return err
+			}
+		}
+		if Exists(names, header.Name) {
+			z, err := zipWriter.Create(header.Name)
+			if err == nil {
+				io.Copy(z, rarReader)
+			}
+		}
 	}
 }

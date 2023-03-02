@@ -6,8 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/Heng-Bian/archive-proxy/pkg/archive"
-	"github.com/ulikunitz/xz"
 	"io"
 	"log"
 	"net"
@@ -15,6 +13,9 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+
+	"github.com/Heng-Bian/archive-proxy/pkg/archive"
+	"github.com/ulikunitz/xz"
 )
 
 const (
@@ -35,6 +36,8 @@ type ArchiveStruct struct {
 	FileType string
 	Files    []string
 }
+
+var empty ArchiveStruct
 
 type Proxy struct {
 	// client used to fetch remote URLs
@@ -85,10 +88,8 @@ func (p *Proxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	if strings.HasPrefix(r.URL.Path, "/healthz") {
 		handler = http.HandlerFunc(p.ServeHealthCheck)
-	} else if strings.HasPrefix(r.URL.Path, "/list") || strings.HasPrefix(r.URL.Path, "/stream") {
-		handler = http.HandlerFunc(p.ServeArchive)
 	} else {
-		handler = http.HandlerFunc(p.Serve404)
+		handler = http.HandlerFunc(p.ServeArchive)
 	}
 	handler.ServeHTTP(w, r)
 }
@@ -156,6 +157,29 @@ func (p *Proxy) ServeArchive(w http.ResponseWriter, r *http.Request) {
 			writeRes(w, res, errors.New("do not support "+res.FileType))
 		}
 
+	} else if strings.HasPrefix(r.URL.Path, "/pack") {
+		if r.Method != "POST" {
+			writeRes(w, empty, errors.New("mehod not allowed"))
+		} else {
+			var names []string
+			err := json.NewDecoder(r.Body).Decode(&names)
+			if err != nil {
+				writeRes(w, empty, errors.New("mehod not allowed"))
+				return
+			}
+			switch fileFormat {
+			case archive.ZIP_TYPE:
+				archive.ZipToZip(w, reader, names, charset)
+			case archive.TAR_TYPE:
+				archive.TarToZip(w, reader, names)
+			case archive.SEVEN_Z_TYPE:
+				archive.SevenZToZip(w, reader, names)
+			case archive.RAR_TYPE:
+				archive.RarToZip(w, reader, names)
+			default:
+				writeRes(w, empty, errors.New("only support zip,tar,7z and rar"))
+			}
+		}
 	} else if strings.HasPrefix(r.URL.Path, "/stream") {
 		//return stream
 		var isUseFileName bool
@@ -166,7 +190,6 @@ func (p *Proxy) ServeArchive(w http.ResponseWriter, r *http.Request) {
 		if fileName == r.URL.Path {
 			value, err := strconv.Atoi(index)
 			if err != nil {
-				var empty ArchiveStruct
 				writeRes(w, empty, err)
 				return
 			}
@@ -222,10 +245,6 @@ func (p *Proxy) ServeArchive(w http.ResponseWriter, r *http.Request) {
 	} else {
 		w.WriteHeader(404)
 	}
-}
-
-func (p *Proxy) Serve404(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusNotFound)
 }
 
 // allowed determines whether the specified request contains an allowed
