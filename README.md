@@ -26,42 +26,83 @@ GET /list
 |charset|query|string| NO |specify the charset name, default utf-8|
 |format|query|string| NO |indicate the file format, autodetect by default|
 
-### response example
+### request example
+```
+GET /list?url=https://golang.google.cn/dl/go1.20.1.windows-amd64.zip HTTP/1.1
+Host: localhost:8080
+```
+
+### response example (Not showing all)
 
 ```json
 {
-  "FileType": "zip",
-  "Files": [
-    "example/1.jpg",
-    "example/2.jpg",
-    "example/3.jpg",
-    "example/4.jpg",
-    "example/5.jpg",
-    "example/6.jpg",
-    "example/7.jpg",
-    "example/8.jpg",
-    "example/9.jpg"
-  ]
+    "FileType": "zip",
+    "Files": [
+        "go/",
+        "go/CONTRIBUTING.md",
+        "go/LICENSE",
+        "go/PATENTS",
+        "go/README.md",
+        "go/SECURITY.md",
+        "go/VERSION",
+        "go/api/",
+        "go/api/README"
+    ]
 }
 ```
 
 ## Download a single item
 
-GET /stream/{path}
+GET /stream/{entry}
 
 ### request parameter
 
 |name|location|type|required|description|
 |---|---|---|---|---|
-|path|path|string| NO |item name in the Files array. One of path or index is required|
+|entry|path|string| YES |entry name in the Files array. |
 |url|query|string| YES |the archive URL|
 |charset|query|string| NO |specify the charset name, default utf-8|
 |format|query|string| NO |indicate the file format, autodetect by default|
-|index|query|integer| NO |index of Files array, start with 0. One of path or index is required|
 
+### Request example
+```
+GET /stream/go/README.md?url=https://golang.google.cn/dl/go1.20.1.windows-amd64.zip HTTP/1.1
+Host: localhost:8080
+```
+
+### Response example
+binary file stream
+
+## Download mutiple item to a zip file
+
+POST /pack
+
+|name|location|type|required|description|
+|---|---|---|---|---|
+|url|query|string| YES |the archive URL|
+|charset|query|string| NO |specify the charset name, default utf-8|
+|format|query|string| NO |indicate the file format, autodetect by default|
+|body|body|array[string]| YES |entry name array|
+
+### request example
+```
+POST /pack?url=https://golang.google.cn/dl/go1.20.1.windows-amd64.zip HTTP/1.1
+Host: localhost:8080
+Content-Type: application/json
+Content-Length: 134
+
+[
+    "go/CONTRIBUTING.md",
+    "go/LICENSE",
+    "go/PATENTS",
+    "go/README.md",
+    "go/SECURITY.md",
+    "go/api/README"
+]
+```
 ### response example
 
-binary stream
+zip binary stream
 
 ## Quick start
 

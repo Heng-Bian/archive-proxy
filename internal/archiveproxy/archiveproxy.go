@@ -88,10 +88,8 @@ func (p *Proxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	if strings.HasPrefix(r.URL.Path, "/healthz") {
 		handler = http.HandlerFunc(p.ServeHealthCheck)
-	} else if strings.HasPrefix(r.URL.Path, "/list") || strings.HasPrefix(r.URL.Path, "/stream") {
-		handler = http.HandlerFunc(p.ServeArchive)
 	} else {
-		handler = http.HandlerFunc(p.Serve404)
+		handler = http.HandlerFunc(p.ServeArchive)
 	}
 	handler.ServeHTTP(w, r)
 }
@@ -247,10 +245,6 @@ func (p *Proxy) ServeArchive(w http.ResponseWriter, r *http.Request) {
 	} else {
 		w.WriteHeader(404)
 	}
-}
-
-func (p *Proxy) Serve404(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusNotFound)
 }
 
 // allowed determines whether the specified request contains an allowed
