@@ -15,6 +15,7 @@ import (
 	"strings"
 
 	"github.com/Heng-Bian/archive-proxy/pkg/archive"
+	"github.com/Heng-Bian/archive-proxy/web"
 	"github.com/ulikunitz/xz"
 )
 
@@ -86,7 +87,9 @@ func (p *Proxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "fail to proxy,err:%s", err)
 		return
 	}
-	if strings.HasPrefix(r.URL.Path, "/healthz") {
+	if strings.HasPrefix(r.URL.Path, "/static") {
+		handler = http.FileServer(http.FS(web.EmbedFS))
+	} else if strings.HasPrefix(r.URL.Path, "/healthz") {
 		handler = http.HandlerFunc(p.ServeHealthCheck)
 	} else {
 		handler = http.HandlerFunc(p.ServeArchive)
