@@ -15,7 +15,6 @@ import (
 	"strings"
 
 	"github.com/Heng-Bian/archive-proxy/pkg/archive"
-	"github.com/Heng-Bian/archive-proxy/web"
 	"github.com/ulikunitz/xz"
 )
 
@@ -75,33 +74,17 @@ func NewProxy(client *http.Client) *Proxy {
 	return proxy
 }
 
-// ServeHTTP handles incoming requests.
-func (p *Proxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	var handler http.Handler
-	if r.URL.Path == "/favicon.ico" {
-		return // ignore favicon requests
-	}
+func (p *Proxy) ServeHealthCheck(w http.ResponseWriter, r *http.Request) {
+	_, _ = fmt.Fprint(w, "OK")
+}
+
+func (p *Proxy) ServeArchive(w http.ResponseWriter, r *http.Request) {
 	err := p.allowed(r)
 	if err != nil {
 		w.WriteHeader(500)
 		fmt.Fprintf(w, "fail to proxy,err:%s", err)
 		return
 	}
-	if strings.HasPrefix(r.URL.Path, "/static") {
-		handler = http.FileServer(http.FS(web.EmbedFS))
-	} else if strings.HasPrefix(r.URL.Path, "/healthz") {
-		handler = http.HandlerFunc(p.ServeHealthCheck)
-	} else {
-		handler = http.HandlerFunc(p.ServeArchive)
-	}
-	handler.ServeHTTP(w, r)
-}
-
-func (p *Proxy) ServeHealthCheck(w http.ResponseWriter, r *http.Request) {
-	_, _ = fmt.Fprint(w, "OK")
-}
-
-func (p *Proxy) ServeArchive(w http.ResponseWriter, r *http.Request) {
 	targetUrl := r.URL.Query().Get(targetUrl)
 	fileFormat := r.URL.Query().Get(fileFormat)
 	charset := r.URL.Query().Get(charset)

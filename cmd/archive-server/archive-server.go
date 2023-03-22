@@ -3,11 +3,13 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/Heng-Bian/archive-proxy/internal/archiveproxy"
 	"log"
 	"net/http"
 	"os"
 	"strings"
+
+	"github.com/Heng-Bian/archive-proxy/internal/archiveproxy"
+	"github.com/Heng-Bian/archive-proxy/web"
 )
 
 var (
@@ -40,9 +42,13 @@ func main() {
 	}
 	addr := *ip + ":" + *port
 	server := &http.Server{
-		Addr:    addr,
-		Handler: proxy,
+		Addr: addr,
 	}
+	http.Handle("/", http.FileServer(http.FS(web.EmbedFS)))
+	http.Handle("/healthz", http.HandlerFunc(proxy.ServeHealthCheck))
+	http.Handle("/list", http.HandlerFunc(proxy.ServeArchive))
+	http.Handle("/pack", http.HandlerFunc(proxy.ServeArchive))
+	http.Handle("/stream", http.HandlerFunc(proxy.ServeArchive))
 	server.ListenAndServe()
 }
 
