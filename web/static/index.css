@@ -56,8 +56,8 @@ select {
 	background-color: #ececec;
 }
 
-select {
-	text-align-last: center;
+#download-entries {
+	text-align-last: left;
 }
 
 button {
