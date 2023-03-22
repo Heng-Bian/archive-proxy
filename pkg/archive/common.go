@@ -98,7 +98,8 @@ func UrlToReader(httpUrl string, client *http.Client) (*httpreader.Reader, error
 		return nil, err
 	}
 	option := httpreader.WithClient(client)
-	reader, err := httpreader.NewReader(url, option)
+	header := httpreader.WithHeader(make(map[string][]string))
+	reader, err := httpreader.NewReader(url, option, header)
 	if err != nil {
 		return nil, err
 	}
