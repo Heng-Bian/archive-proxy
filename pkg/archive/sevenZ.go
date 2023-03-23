@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"io"
 	"sort"
+	"strings"
 
 	"github.com/Heng-Bian/httpreader"
 	"github.com/saracen/go7z"
@@ -26,7 +27,12 @@ func List7zFiles(r *httpreader.Reader) (files []string, err error) {
 				return fileNames, err
 			}
 		}
-		fileNames = append(fileNames, header.Name)
+		//dir
+		if header.Attrib == 16 && !strings.HasSuffix(header.Name, "/") {
+			fileNames = append(fileNames, header.Name+"/")
+		} else {
+			fileNames = append(fileNames, header.Name)
+		}
 	}
 }
 
@@ -96,9 +102,13 @@ func SevenZToZip(w io.Writer, r *httpreader.Reader, names []string) error {
 				return err
 			}
 		}
-		if Exists(names, header.Name) {
-			z, err := zipWriter.Create(header.Name)
-			if err == nil {
+		name := header.Name
+		if header.Attrib == 16 && !strings.HasSuffix(header.Name, "/") {
+			name = name + "/"
+		}
+		if Exists(names, name) {
+			z, err := zipWriter.Create(name)
+			if err == nil && !strings.HasSuffix(header.Name, "/") {
 				io.Copy(z, sevenZ)
 			}
 		}

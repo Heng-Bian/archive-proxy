@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 	"sort"
+	"strings"
 
 	"github.com/Heng-Bian/httpreader"
 	rardecode "github.com/nwaples/rardecode/v2"
@@ -26,7 +27,11 @@ func ListRarFiles(r *httpreader.Reader) (files []string, err error) {
 				return fileNames, err
 			}
 		}
-		fileNames = append(fileNames, header.Name)
+		if header.IsDir && !strings.HasSuffix(header.Name, "/") {
+			fileNames = append(fileNames, header.Name+"/")
+		} else {
+			fileNames = append(fileNames, header.Name)
+		}
 	}
 }
 
@@ -92,9 +97,13 @@ func RarToZip(w io.Writer, r *httpreader.Reader, names []string) error {
 				return err
 			}
 		}
-		if Exists(names, header.Name) {
-			z, err := zipWriter.Create(header.Name)
-			if err == nil {
+		name := header.Name
+		if header.IsDir && !strings.HasSuffix(header.Name, "/") {
+			name = name + "/"
+		}
+		if Exists(names, name) {
+			z, err := zipWriter.Create(name)
+			if err == nil && !strings.HasSuffix(header.Name, "/") {
 				io.Copy(z, rarReader)
 			}
 		}

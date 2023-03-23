@@ -33,6 +33,7 @@ Host: localhost:8080
 ```
 
 ### response example (Not showing all)
+File ending with "/" means directory
 
 ```json
 {
@@ -117,6 +118,10 @@ For help info
 `./archive-server -help`  
 Start the service with port 8080  
 `./archive-server -port 8080`
+
+### Access in a browser
+After runing the archive-server,
+visit `http://localhost:8080`
 
 ## Mechanism
 archiver-proxy offers an random access to archive item before download the entire
