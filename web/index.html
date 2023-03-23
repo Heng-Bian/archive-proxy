@@ -16,7 +16,10 @@
 		</h1>
 
 		<div class="description">
-			An archive proxy written in Go language
+			An archive proxy written in Go language supporting zip, tar, 7z, rar(including rar5).
+			<br>
+			<br>
+			For more information <a href="https://github.com/Heng-Bian/archive-proxy/blob/main/README.md">https://github.com/Heng-Bian/archive-proxy/blob/main/README.md</a>
 			<hr>
 		</div>
 
@@ -24,13 +27,13 @@
 
 		<ol id="demo-container">
 			<li>
-				<label>
+				<div class="sub-div">
 					<span class="form-label">Paste a URL</span>
-					<input type="text" id="url-input" onchange="clearFiles()">
-				</label>
+					<input type="text" id="url-input">
+				</div>
 			</li>
 			<li id="encoding-item">
-				<label>
+				<div class="sub-div">
 					<span class="form-label">Select the encoding of names</span>
 					<select id="encoding-input">
 						<option>utf-8</option>
@@ -73,27 +76,27 @@
 						<option>x-mac-cyrillic</option>
 						<option>x-user-defined</option>
 					</select>
-				</label>
+				</div>
 			</li>
 			<li>
-				<label>
+				<div class="sub-div">
 					<span class="form-label">List the remote archive files</span>
-					<button id="read" onclick="read()">Read</button>
-				</label>
+					<button id="read">Read</button>
+				</div>
 			</li>
 			<li>
-				<label>
+				<div class="sub-div">
 					<span class="form-label">Select multiple files</span>
 					<select id="download-entries" style="height: 400px;" multiple="multiple">
 
 					</select>
-				</label>
+				</div>
 			</li>
 			<li>
-				<label>
+				<div class="sub-div">
 					<span class="form-label">Download the selected files</span>
-					<button id="download" onclick="download()">Download</button>
-				</label>
+					<button id="download">Download</button>
+				</div>
 			</li>
 		</ol>
 
