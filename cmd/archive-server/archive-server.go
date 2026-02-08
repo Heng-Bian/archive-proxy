@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io/fs"
 	"log"
 	"net/http"
 	"os"
@@ -44,7 +45,9 @@ func main() {
 	server := &http.Server{
 		Addr: addr,
 	}
-	http.Handle("/", http.FileServer(http.FS(web.EmbedFS)))
+	// Serve the React app from the dist subdirectory
+	distFS, _ := fs.Sub(web.EmbedFS, "dist")
+	http.Handle("/", http.FileServer(http.FS(distFS)))
 	http.Handle("/healthz", http.HandlerFunc(proxy.ServeHealthCheck))
 	http.Handle("/list", http.HandlerFunc(proxy.ServeArchive))
 	http.Handle("/pack", http.HandlerFunc(proxy.ServeArchive))

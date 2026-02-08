@@ -4,5 +4,5 @@ import (
 	"embed"
 )
 
-//go:embed index.html static/*
+//go:embed dist/*
 var EmbedFS embed.FS

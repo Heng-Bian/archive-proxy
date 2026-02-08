@@ -1,5 +1,3 @@
-github.com/Heng-Bian/httpreader v1.0.1 h1:Z8KlCZYjYrXFwmWBaE2NL8OADLZrG7lT+N9KuTrzLPc=
-github.com/Heng-Bian/httpreader v1.0.1/go.mod h1:nyz32PGb0KEgoUBmBPtpSUC1TfluTOX41aK2knyjggI=
 github.com/Heng-Bian/httpreader v1.1.0 h1:gMkElWnOvsjoNpv449egzchkzQxOWc10FOAq3SyFOwE=
 github.com/Heng-Bian/httpreader v1.1.0/go.mod h1:nyz32PGb0KEgoUBmBPtpSUC1TfluTOX41aK2knyjggI=
 github.com/gabriel-vasile/mimetype v1.2.0 h1:A6z5J8OhjiWFV91sQ3dMI8apYu/tvP9keDaMM3Xu6p4=

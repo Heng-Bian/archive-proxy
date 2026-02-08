@@ -123,6 +123,10 @@ Start the service with port 8080
 After runing the archive-server,
 visit `http://localhost:8080`
 
+The web interface is built with React and Ant Design for a modern user experience.
+
+For UI development, see [web/react-ui/DEVELOPMENT.md](web/react-ui/DEVELOPMENT.md)
+
 ## Mechanism
 archiver-proxy offers an random access to archive item before download the entire
 file. archiver-proxy itself do not cache any data and erverything is based on stream. The archive file on the network MUST support HTTP Range request. Fortunately, the common server such as nginx and Minio support it.
