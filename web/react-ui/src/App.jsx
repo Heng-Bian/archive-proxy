@@ -259,10 +259,6 @@ function App() {
                 onChange={setCharset}
                 style={{ width: '100%' }}
                 size="large"
-                showSearch
-                filterOption={(input, option) =>
-                  (option?.children ?? '').toLowerCase().includes(input.toLowerCase())
-                }
               >
                 {encodingOptions.map(enc => (
                   <Option key={enc} value={enc}>{enc}</Option>
