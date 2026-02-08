@@ -5,7 +5,6 @@ import './App.css'
 
 const { Header, Content, Footer } = Layout
 const { Title, Paragraph, Link } = Typography
-const { Option } = Select
 
 // Encoding options
 const encodingOptions = [
@@ -17,6 +16,9 @@ const encodingOptions = [
   'windows-1251', 'windows-1252', 'windows-1253', 'windows-1254', 'windows-1255',
   'windows-1256', 'windows-1257', 'windows-1258', 'x-mac-cyrillic', 'x-user-defined'
 ]
+
+// Transform encoding options for Select component
+const encodingSelectOptions = encodingOptions.map(enc => ({ label: enc, value: enc }))
 
 // Convert flat file list to tree structure
 function buildTreeData(files) {
@@ -259,15 +261,8 @@ function App() {
                 onChange={setCharset}
                 style={{ width: '100%' }}
                 size="large"
-                showSearch
-                filterOption={(input, option) =>
-                  (option?.children ?? '').toLowerCase().includes(input.toLowerCase())
-                }
-              >
-                {encodingOptions.map(enc => (
-                  <Option key={enc} value={enc}>{enc}</Option>
-                ))}
-              </Select>
+                options={encodingSelectOptions}
+              />
             </div>
 
             <Button
