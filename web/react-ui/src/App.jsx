@@ -5,7 +5,6 @@ import './App.css'
 
 const { Header, Content, Footer } = Layout
 const { Title, Paragraph, Link } = Typography
-const { Option } = Select
 
 // Encoding options
 const encodingOptions = [
@@ -259,11 +258,8 @@ function App() {
                 onChange={setCharset}
                 style={{ width: '100%' }}
                 size="large"
-              >
-                {encodingOptions.map(enc => (
-                  <Option key={enc} value={enc}>{enc}</Option>
-                ))}
-              </Select>
+                options={encodingOptions.map(enc => ({ label: enc, value: enc }))}
+              />
             </div>
 
             <Button
