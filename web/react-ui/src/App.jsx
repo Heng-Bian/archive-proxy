@@ -24,6 +24,7 @@ function buildTreeData(files) {
   
   files.forEach(filePath => {
     const isDir = filePath.endsWith('/')
+    // Filter out empty strings from split to handle edge cases like '//' or trailing slashes
     const parts = filePath.split('/').filter(p => p !== '')
     
     let current = root
