@@ -17,6 +17,9 @@ const encodingOptions = [
   'windows-1256', 'windows-1257', 'windows-1258', 'x-mac-cyrillic', 'x-user-defined'
 ]
 
+// Transform encoding options for Select component
+const encodingSelectOptions = encodingOptions.map(enc => ({ label: enc, value: enc }))
+
 // Convert flat file list to tree structure
 function buildTreeData(files) {
   const root = { children: {} }
@@ -258,7 +261,7 @@ function App() {
                 onChange={setCharset}
                 style={{ width: '100%' }}
                 size="large"
-                options={encodingOptions.map(enc => ({ label: enc, value: enc }))}
+                options={encodingSelectOptions}
               />
             </div>
 
