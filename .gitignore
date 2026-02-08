@@ -5,3 +5,4 @@ web/react-ui/.vite/
 cmd/archive-server/archive-server
 web/*.old
 web/static.old/
+/archive-server
