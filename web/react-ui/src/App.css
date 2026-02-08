@@ -3,11 +3,6 @@
   min-height: 100vh;
 }
 
-/* Ensure smooth transitions */
-* {
-  transition: all 0.3s ease;
-}
-
 /* Custom scrollbar for file list */
 .ant-select-dropdown {
   max-height: 400px;
