@@ -105,6 +105,18 @@ Content-Length: 134
 
 zip binary stream
 
+## User Interface
+
+The web interface is built with React and Ant Design for a modern, user-friendly experience.
+
+![Archive Proxy UI](screenshots/ui-main-page.png)
+
+Features of the UI:
+- **Simple and Clean Interface**: Enter archive URL and character encoding
+- **Tree View**: Browse archive contents in an organized tree structure
+- **Multi-file Download**: Select multiple files and download them as a zip package
+- **Real-time Feedback**: Error messages and loading states for better UX
+
 ## Quick start
 
 ### Build
@@ -122,8 +134,6 @@ Start the service with port 8080
 ### Access in a browser
 After runing the archive-server,
 visit `http://localhost:8080`
-
-The web interface is built with React and Ant Design for a modern user experience.
 
 For UI development, see [web/react-ui/DEVELOPMENT.md](web/react-ui/DEVELOPMENT.md)
 
