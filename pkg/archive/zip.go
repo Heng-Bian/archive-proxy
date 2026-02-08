@@ -10,8 +10,8 @@ import (
 
 func ListZipFiles(r *httpreader.Reader, charset string) (files []string, err error) {
 	fileNames := make([]string, 0, 10)
-	lenth := r.Length
-	zipReader, err := zip.NewReader(r, lenth)
+	length := r.Length
+	zipReader, err := zip.NewReader(r, length)
 	if err != nil {
 		return fileNames, err
 	}
@@ -32,8 +32,8 @@ func ListZipFiles(r *httpreader.Reader, charset string) (files []string, err err
 }
 
 func UnzipByFileName(r *httpreader.Reader, name string, charset string) (io.Reader, error) {
-	lenth := r.Length
-	zipReader, err := zip.NewReader(r, lenth)
+	length := r.Length
+	zipReader, err := zip.NewReader(r, length)
 	if err != nil {
 		return nil, err
 	}
@@ -54,8 +54,8 @@ func UnzipByFileName(r *httpreader.Reader, name string, charset string) (io.Read
 }
 
 func UnzipByFileIndex(r *httpreader.Reader, index int) (io.Reader, error) {
-	lenth := r.Length
-	zipReader, err := zip.NewReader(r, lenth)
+	length := r.Length
+	zipReader, err := zip.NewReader(r, length)
 	if err != nil {
 		return nil, err
 	}
