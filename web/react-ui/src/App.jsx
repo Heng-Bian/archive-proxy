@@ -199,11 +199,11 @@ function App() {
   }
 
   return (
-    <Layout style={{ minHeight: '100vh' }}>
+    <Layout className="app-layout">
       <AppHeader />
       
-      <Content style={{ padding: '50px' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+      <Content className="app-content">
+        <div className="app-container">
           <IntroCard />
 
           <ArchiveInputForm
@@ -223,7 +223,7 @@ function App() {
               type="error"
               closable
               onClose={() => setError(null)}
-              style={{ marginBottom: '24px' }}
+              className="error-alert"
             />
           )}
 

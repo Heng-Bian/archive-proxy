@@ -7,3 +7,21 @@
 .ant-select-dropdown {
   max-height: 400px;
 }
+
+/* Layout styles */
+.app-layout {
+  min-height: 100vh;
+}
+
+.app-content {
+  padding: 50px;
+}
+
+.app-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.error-alert {
+  margin-bottom: 24px;
+}
