@@ -1,10 +1,14 @@
 import { useState } from 'react'
-import { Layout, Typography, Input, Select, Button, Card, Alert, Divider, Tree, theme } from 'antd'
-import { DownloadOutlined, FileZipOutlined, GithubOutlined, GlobalOutlined, FolderOutlined, FileOutlined } from '@ant-design/icons'
+import { Layout, Alert } from 'antd'
+import { FolderOutlined, FileOutlined } from '@ant-design/icons'
+import AppHeader from './components/AppHeader'
+import IntroCard from './components/IntroCard'
+import ArchiveInputForm from './components/ArchiveInputForm'
+import FileTreeCard from './components/FileTreeCard'
+import AppFooter from './components/AppFooter'
 import './App.css'
 
-const { Header, Content, Footer } = Layout
-const { Title, Paragraph, Link } = Typography
+const { Content } = Layout
 
 // Encoding options
 const encodingOptions = [
@@ -90,8 +94,6 @@ function App() {
   const [expandedKeys, setExpandedKeys] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
-  
-  const { token } = theme.useToken()
 
   const handleRead = async () => {
     setError(null)
@@ -198,84 +200,21 @@ function App() {
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
-      <Header style={{
-        display: 'flex',
-        alignItems: 'center',
-        background: token.colorBgContainer,
-        borderBottom: `1px solid ${token.colorBorder}`,
-        padding: '0 50px'
-      }}>
-        <FileZipOutlined style={{ fontSize: '32px', color: token.colorPrimary, marginRight: '16px' }} />
-        <Title level={2} style={{ margin: 0, color: token.colorPrimary }}>
-          Archive Proxy
-        </Title>
-      </Header>
+      <AppHeader />
       
       <Content style={{ padding: '50px' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <Card
-            title={
-              <div style={{ display: 'flex', alignItems: 'center' }}>
-                <GlobalOutlined style={{ marginRight: '8px' }} />
-                Read Remote Archive Files
-              </div>
-            }
-            style={{ marginBottom: '24px' }}
-            extra={
-              <Link href="https://github.com/Heng-Bian/archive-proxy" target="_blank">
-                <GithubOutlined style={{ fontSize: '20px' }} />
-              </Link>
-            }
-          >
-            <Paragraph>
-              An archive proxy written in Go language supporting zip, tar, 7z, rar (including rar5).
-            </Paragraph>
-            <Paragraph>
-              For more information visit{' '}
-              <Link href="https://github.com/Heng-Bian/archive-proxy/blob/main/README.md" target="_blank">
-                GitHub Repository
-              </Link>
-            </Paragraph>
-          </Card>
+          <IntroCard />
 
-          <Card style={{ marginBottom: '24px' }}>
-            <div style={{ marginBottom: '24px' }}>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500 }}>
-                Archive URL
-              </label>
-              <Input
-                placeholder="Enter archive URL (e.g., https://example.com/file.zip)"
-                value={url}
-                onChange={handleUrlChange}
-                size="large"
-                prefix={<GlobalOutlined />}
-              />
-            </div>
-
-            <div style={{ marginBottom: '24px' }}>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500 }}>
-                Character Encoding
-              </label>
-              <Select
-                value={charset}
-                onChange={setCharset}
-                style={{ width: '100%' }}
-                size="large"
-                options={encodingSelectOptions}
-              />
-            </div>
-
-            <Button
-              type="primary"
-              size="large"
-              icon={<FileZipOutlined />}
-              onClick={handleRead}
-              loading={loading}
-              block
-            >
-              List Archive Files
-            </Button>
-          </Card>
+          <ArchiveInputForm
+            url={url}
+            charset={charset}
+            loading={loading}
+            onUrlChange={handleUrlChange}
+            onCharsetChange={setCharset}
+            onRead={handleRead}
+            encodingOptions={encodingSelectOptions}
+          />
 
           {error && (
             <Alert
@@ -288,64 +227,21 @@ function App() {
             />
           )}
 
-          {files.length > 0 && (
-            <Card
-              title={
-                <div style={{ display: 'flex', alignItems: 'center' }}>
-                  <FileZipOutlined style={{ marginRight: '8px' }} />
-                  Archive Contents ({files.length} items)
-                </div>
-              }
-              style={{ marginBottom: '24px' }}
-            >
-              <div style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500 }}>
-                  Select files to download (directories shown for structure only)
-                </label>
-                <div style={{ 
-                  border: `1px solid ${token.colorBorder}`,
-                  borderRadius: token.borderRadius,
-                  padding: '16px',
-                  maxHeight: '500px',
-                  overflow: 'auto',
-                  backgroundColor: token.colorBgContainer
-                }}>
-                  <Tree
-                    checkable
-                    selectable={false}
-                    checkedKeys={checkedKeys}
-                    expandedKeys={expandedKeys}
-                    onCheck={onCheck}
-                    onExpand={onExpand}
-                    treeData={treeData}
-                    showIcon
-                  />
-                </div>
-              </div>
-
-              <Divider />
-
-              <Button
-                type="primary"
-                size="large"
-                icon={<DownloadOutlined />}
-                onClick={handleDownload}
-                loading={loading}
-                disabled={selectedFiles.length === 0}
-                block
-              >
-                Download Selected Files ({selectedFiles.length} selected)
-              </Button>
-            </Card>
-          )}
+          <FileTreeCard
+            files={files}
+            treeData={treeData}
+            checkedKeys={checkedKeys}
+            expandedKeys={expandedKeys}
+            selectedFiles={selectedFiles}
+            loading={loading}
+            onCheck={onCheck}
+            onExpand={onExpand}
+            onDownload={handleDownload}
+          />
         </div>
       </Content>
       
-      <Footer style={{ textAlign: 'center', background: token.colorBgContainer }}>
-        <Paragraph style={{ margin: 0 }}>
-          Archive Proxy © 2026 | Built with React & Ant Design
-        </Paragraph>
-      </Footer>
+      <AppFooter />
     </Layout>
   )
 }
