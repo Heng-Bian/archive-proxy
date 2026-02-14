@@ -2,7 +2,6 @@
 **/.vscode/
 web/react-ui/node_modules/
 web/react-ui/.vite/
-web/dist/
 cmd/archive-server/archive-server
 web/*.old
 web/static.old/
